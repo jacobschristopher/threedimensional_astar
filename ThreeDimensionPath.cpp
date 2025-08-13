@@ -6,6 +6,40 @@
 #include <set>
 #include <math.h>
 
+void display()
+{
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glMatrixMode(GL_PROJECTION);
+
+    glLoadIdentity();
+
+    gluPerspective(60.0, 4.0/3.0, 0.01, 100.0);
+
+    glMatrixMode(GL_MODELVIEW);
+
+    glLoadIdentity();
+
+    gluLookAt(40, 0, 40, 0, 0, 0, 0, 1, 0);
+
+    glPushMatrix();
+    glRotatef(0.0, 1.0, 0.0, 0.0);
+    glRotatef(0.0, 0.0, 1.0, 0.0);
+    glRotatef(0.0, 0.0, 0.0, 1.0);
+
+    glPopMatrix();
+
+    glutSwapBuffers();
+}
+
+void handleKey(unsigned char key, int x, int y)
+{
+
+}
+
+void specialInput(int key, int x, int y) {
+    
+}
+
 int main(int argc, char* argv[]) 
 {
     // Start up GLUT
