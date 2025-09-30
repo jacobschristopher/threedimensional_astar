@@ -21,3 +21,5 @@ struct Voxels{
 
 // Defines a pair object for float values for distance and Voxels for open and closed lists
 typedef std::pair<float, Voxels> Pair;
+
+

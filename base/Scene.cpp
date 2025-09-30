@@ -1,6 +1,13 @@
 #include "Scene.h"
 
 #include <GL/glut.h>
+#include <iostream>
+
+Scene::Scene() {
+    baseCube.upperRightCorner = Vector(15, 15, 15);
+    baseCube.bottomLeftCorner = Vector(-15, -15, -15);
+    baseCube.center = Vector(0, 0, 0);
+}
 
 /** Buids the base cube for the structure that we initially see in the window*/
 void Scene::buildVolume() {
@@ -69,6 +76,7 @@ void Scene::buildVolume() {
 
 /** Builds the obstacles that the user defines for the area */
 void Scene::buildObstacle() {
+  std::cout << "Obstacles reached" << std::endl;
   for(size_t i = 0; i < spheres.size(); i++) {
 
     // Uses a float variable named theta to calculate the different vertices needed to be drawn
@@ -83,5 +91,6 @@ void Scene::buildObstacle() {
       }
     }
     glEnd();
+
   }
 }
