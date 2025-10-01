@@ -1,5 +1,5 @@
 #include "Render.h"
-#include <GL.glut.h>
+#include <GL/glut.h>
 #include <cmath>
 
 Render::Render() {}
@@ -21,7 +21,7 @@ void Render::setupCamera(double rotate_x, double rotate_y, double rotate_z) {
 }
 
 void Render::clearScreen() {
-    glPopMatrix()
+    glPopMatrix();
 }
 
 void Render::swapBuffers() {
@@ -30,70 +30,11 @@ void Render::swapBuffers() {
 
 void Render::drawVoxels(const std::vector<Voxels>& cubes) {
   for(size_t i = 0; i < cubes.size(); i++) {
-    Vector URC = cubes[i].upperRightCorner;
-    Vector BLC = cubes[i].bottomLeftCorner;
-
-    glBegin(GL_LINES);
-    glColor3f(0.9f, 0.0f, 0.0);
-
-    // Back Face
-    glVertex3f(BLC[0], BLC[1], BLC[2]);
-    glVertex3f(BLC[0], URC[1], BLC[2]);
-
-    glVertex3f(BLC[0], URC[1], BLC[2]);
-    glVertex3f(URC[0], URC[1], BLC[2]);
-
-    glVertex3f(URC[0], URC[1], BLC[2]);
-    glVertex3f(URC[0], BLC[1], BLC[2]);
-
-    glVertex3f(URC[0], BLC[1], BLC[2]);
-    glVertex3f(BLC[0], BLC[1], BLC[2]);
-
-
-    //Left Face
-    glVertex3f(BLC[0], BLC[1], URC[2]);
-    glVertex3f(BLC[0], URC[1], URC[2]);
-
-    glVertex3f(BLC[0], URC[1], URC[2]);
-    glVertex3f(BLC[0], URC[1], BLC[2]);
-
-    glVertex3f(BLC[0], URC[1], BLC[2]);
-    glVertex3f(BLC[0], BLC[1], BLC[2]);
-
-    glVertex3f(BLC[0], BLC[1], BLC[2]);
-    glVertex3f(BLC[0], BLC[1], URC[2]);
-
-    // Front Face
-    glVertex3f(URC[0], BLC[1], URC[2]);
-    glVertex3f(URC[0], URC[1], URC[2]);
-
-    glVertex3f(URC[0], URC[1], URC[2]);
-    glVertex3f(BLC[0], URC[1], URC[2]);
-
-    glVertex3f(BLC[0], URC[1], URC[2]);
-    glVertex3f(BLC[0], BLC[1], URC[2]);
-
-    glVertex3f(BLC[0], BLC[1], URC[2]);
-    glVertex3f(URC[0], BLC[1], URC[2]);
-
-    //Right Face
-    glVertex3f(URC[0], BLC[1], BLC[2]);
-    glVertex3f(URC[0], URC[1], BLC[2]);
-
-    glVertex3f(URC[0], URC[1], BLC[2]);
-    glVertex3f(URC[0], URC[1], URC[2]);
-
-    glVertex3f(URC[0], URC[1], URC[2]);
-    glVertex3f(URC[0], BLC[1], URC[2]);
-
-    glVertex3f(URC[0], BLC[1], URC[2]);
-    glVertex3f(URC[0], BLC[1], BLC[2]);
-
-    glEnd();
+    drawCube(cubes[i].upperRightCorner, cubes[i].bottomLeftCorner, 0.9, 0.0, 0.0);
   }
 }
 
-Render::drawPath(const std::vector<Vector>& path) {
+void Render::drawPath(const std::vector<Vector>& path) {
   for(size_t i = 0; i < path.size() - 1; i++) {
     // Starts drawing line method and sets color
     glBegin(GL_LINES);
@@ -108,4 +49,128 @@ Render::drawPath(const std::vector<Vector>& path) {
   }
 }
 
-Render::draw
+void Render::drawStartGoalNodes(const Voxels &start, const Voxels &goal, bool showEdges)
+{
+  float theta = (2 * M_PI) / 50;
+
+  // Draw start node (green)
+  drawSphere(start.center, 1, 0.2, 0.8, 0.1);
+
+  // Draw goal node (blue)
+  drawSphere(goal.center, 1, 0.1, 0.1, 0.8);
+
+  // // Draw edges if path not found
+  // if(path.empty()) {
+  //   for(size_t i = 0; i < start.edges.size(); i++) {
+  //     glBegin(GL_LINES);
+  //       glColor3f(1.0f, 1.0f, 0.0f);
+  //       Vector pointOne = start.center;
+  //       Vector pointTwo = start.edges[i].center;
+  //       glVertex3f(pointOne[0], pointOne[1], pointOne[2]);
+  //       glVertex3f(pointTwo[0], pointTwo[1], pointTwo[2]);
+  //       glEnd();
+  //   }
+
+  //   for(size_t i = 0; i < goal.edges.size(); i++) {
+  //     glBegin(GL_LINES);
+  //       glColor3f(1.0f, 1.0f, 0.0f);
+  //         Vector pointOne = goal.center;
+  //         Vector pointTwo = goal.edges[i].center;
+  //         glVertex3f(pointOne[0], pointOne[1], pointOne[2]);
+  //         glVertex3f(pointTwo[0], pointTwo[1], pointTwo[2]);
+  //         glEnd();
+  //     }
+  // }
+
+}
+
+void Render::drawEdges(const std::vector<Voxels>& cubes) {
+  for(size_t i = 0; i < cubes.size(); i++) {
+    for(size_t j = 0; j < cubes[i].edges.size(); j++) {
+      glBegin(GL_LINES);
+      glColor3f(1.0f, 1.0f, 0.0f);
+
+      Vector pointOne = cubes[i].center;
+      Vector pointTwo = cubes[i].edges[j].center;
+
+      glVertex3f(pointOne[0], pointOne[1], pointOne[2]);
+      glVertex3f(pointTwo[0], pointTwo[1], pointTwo[2]);
+
+      glEnd();
+    }
+  }
+}
+
+void Render::drawSphere(const Vector& center, float radius, float r, float g, float b) {
+  float theta = (2 * M_PI) / 50;
+
+  for (float v = 0.0; v < M_PI; v+= theta) {
+    glBegin(GL_TRIANGLE_STRIP);
+    for (float u = 0.0; u < 2 * M_PI; u += theta) {
+      glColor3f(r, g, b);
+      glVertex3f((cos(u) * sin(v) * radius) + center[0], (sin(u) * sin(v) * radius) + center[1], (cos(v) * radius) + center[2]);
+      glVertex3f((cos(u) * sin(v + theta) * radius) + center[0], (sin(u) * sin(v + theta) * radius) + center[1], (cos(v + theta) * radius) + center[2]);
+    }
+  }
+  glEnd();
+}
+
+void Render::drawCube(const Vector& upperRight, const Vector& bottomLeft, float r, float g, float b) {
+  glBegin(GL_LINES);
+  glColor3f(r, g, b);
+
+  // Back Face
+  glVertex3f(bottomLeft[0], bottomLeft[1], bottomLeft[2]);
+  glVertex3f(bottomLeft[0], upperRight[1], bottomLeft[2]);
+
+  glVertex3f(bottomLeft[0], upperRight[1], bottomLeft[2]);
+  glVertex3f(upperRight[0], upperRight[1], bottomLeft[2]);
+
+  glVertex3f(upperRight[0], upperRight[1], bottomLeft[2]);
+  glVertex3f(upperRight[0], bottomLeft[1], bottomLeft[2]);
+
+  glVertex3f(upperRight[0], bottomLeft[1], bottomLeft[2]);
+  glVertex3f(bottomLeft[0], bottomLeft[1], bottomLeft[2]);
+
+
+  //Left Face
+  glVertex3f(bottomLeft[0], bottomLeft[1], upperRight[2]);
+  glVertex3f(bottomLeft[0], upperRight[1], upperRight[2]);
+
+  glVertex3f(bottomLeft[0], upperRight[1], upperRight[2]);
+  glVertex3f(bottomLeft[0], upperRight[1], bottomLeft[2]);
+
+  glVertex3f(bottomLeft[0], upperRight[1], bottomLeft[2]);
+  glVertex3f(bottomLeft[0], bottomLeft[1], bottomLeft[2]);
+
+  glVertex3f(bottomLeft[0], bottomLeft[1], bottomLeft[2]);
+  glVertex3f(bottomLeft[0], bottomLeft[1], upperRight[2]);
+
+  // Front Face
+  glVertex3f(upperRight[0], bottomLeft[1], upperRight[2]);
+  glVertex3f(upperRight[0], upperRight[1], upperRight[2]);
+
+  glVertex3f(upperRight[0], upperRight[1], upperRight[2]);
+  glVertex3f(bottomLeft[0], upperRight[1], upperRight[2]);
+
+  glVertex3f(bottomLeft[0], upperRight[1], upperRight[2]);
+  glVertex3f(bottomLeft[0], bottomLeft[1], upperRight[2]);
+
+  glVertex3f(bottomLeft[0], bottomLeft[1], upperRight[2]);
+  glVertex3f(upperRight[0], bottomLeft[1], upperRight[2]);
+
+  //Right Face
+  glVertex3f(upperRight[0], bottomLeft[1], bottomLeft[2]);
+  glVertex3f(upperRight[0], upperRight[1], bottomLeft[2]);
+
+  glVertex3f(upperRight[0], upperRight[1], bottomLeft[2]);
+  glVertex3f(upperRight[0], upperRight[1], upperRight[2]);
+
+  glVertex3f(upperRight[0], upperRight[1], upperRight[2]);
+  glVertex3f(upperRight[0], bottomLeft[1], upperRight[2]);
+
+  glVertex3f(upperRight[0], bottomLeft[1], upperRight[2]);
+  glVertex3f(upperRight[0], bottomLeft[1], bottomLeft[2]);
+
+  glEnd();
+}

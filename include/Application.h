@@ -2,6 +2,7 @@
 #define __APPLICATION_H__
 
 #include "Scene.h"
+#include "Render.h"
 #include <memory>
 
 class Application {
@@ -18,6 +19,7 @@ class Application {
         int winWidth;
         int winHeight;
         std::shared_ptr<Scene> scene;
+        std::shared_ptr<Render> renderer;
         Voxels start;
         Voxels goal;
         int depth;

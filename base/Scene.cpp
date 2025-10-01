@@ -76,7 +76,6 @@ void Scene::buildVolume() {
 
 /** Builds the obstacles that the user defines for the area */
 void Scene::buildObstacle() {
-  std::cout << "Obstacles reached" << std::endl;
   for(size_t i = 0; i < spheres.size(); i++) {
 
     // Uses a float variable named theta to calculate the different vertices needed to be drawn

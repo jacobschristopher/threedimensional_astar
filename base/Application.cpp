@@ -12,6 +12,7 @@ Application::Application(int width, int height)
     
     instance = this;
     scene = std::make_shared<Scene>();
+    renderer = std::make_shared<Render>();
     
     // starting and end positions
     start.center = Vector(9, 9, 9);
@@ -57,39 +58,28 @@ void Application::specialCallback(int key, int x, int y) {
 
 // Display
 void Application::display() {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective(60.0, 4.0/3.0, 0.01, 100.0);
-    
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    gluLookAt(40, 0, 40, 0, 0, 0, 0, 1, 0);
-    
-    glPushMatrix();
-    glRotatef(rotate_x, 1.0, 0.0, 0.0);
-    glRotatef(rotate_y, 0.0, 1.0, 0.0);
-    glRotatef(rotate_z, 0.0, 0.0, 1.0);
+
+    renderer->setupCamera(rotate_x, rotate_y, rotate_z);
     
     scene->buildVolume();
     scene->buildObstacle();
 
     if(voxelToggle) {
-        drawVoxels();
+        renderer->drawVoxels(scene->getCubes());
     }
 
     if(scene->getPath().empty()) {  // FIX: Access path through scene
-        drawEdges();
+        renderer->drawEdges(scene->getCubes());
     }
 
-    drawNodes();
+    renderer->drawStartGoalNodes(start, goal, true);
 
     if(!scene->getPath().empty()) {  // FIX: Access path through scene
-        drawPath();
+        renderer->drawPath(scene->getPath());
     }
 
-    glPopMatrix();
-    glutSwapBuffers();
+    renderer->clearScreen();
+    renderer->swapBuffers();
 }
 
 // Input handlers
@@ -313,77 +303,6 @@ bool Application::collision(Vector URC, Vector BLC, Vector centerPosition) {
     return false;
 }
 
-void Application::drawVoxels() {
-    auto& cubes = scene->getCubes();
-    for(size_t i = 0; i < cubes.size(); i++) {
-        Vector URC = cubes[i].upperRightCorner;
-        Vector BLC = cubes[i].bottomLeftCorner;
-
-        glBegin(GL_LINES);
-        glColor3f(0.9f, 0.0f, 0.0);
-
-        // Back Face
-        glVertex3f(BLC[0], BLC[1], BLC[2]);
-        glVertex3f(BLC[0], URC[1], BLC[2]);
-        glVertex3f(BLC[0], URC[1], BLC[2]);
-        glVertex3f(URC[0], URC[1], BLC[2]);
-        glVertex3f(URC[0], URC[1], BLC[2]);
-        glVertex3f(URC[0], BLC[1], BLC[2]);
-        glVertex3f(URC[0], BLC[1], BLC[2]);
-        glVertex3f(BLC[0], BLC[1], BLC[2]);
-
-        //Left Face
-        glVertex3f(BLC[0], BLC[1], URC[2]);
-        glVertex3f(BLC[0], URC[1], URC[2]);
-        glVertex3f(BLC[0], URC[1], URC[2]);
-        glVertex3f(BLC[0], URC[1], BLC[2]);
-        glVertex3f(BLC[0], URC[1], BLC[2]);
-        glVertex3f(BLC[0], BLC[1], BLC[2]);
-        glVertex3f(BLC[0], BLC[1], BLC[2]);
-        glVertex3f(BLC[0], BLC[1], URC[2]);
-
-        // Front Face
-        glVertex3f(URC[0], BLC[1], URC[2]);
-        glVertex3f(URC[0], URC[1], URC[2]);
-        glVertex3f(URC[0], URC[1], URC[2]);
-        glVertex3f(BLC[0], URC[1], URC[2]);
-        glVertex3f(BLC[0], URC[1], URC[2]);
-        glVertex3f(BLC[0], BLC[1], URC[2]);
-        glVertex3f(BLC[0], BLC[1], URC[2]);
-        glVertex3f(URC[0], BLC[1], URC[2]);
-
-        //Right Face
-        glVertex3f(URC[0], BLC[1], BLC[2]);
-        glVertex3f(URC[0], URC[1], BLC[2]);
-        glVertex3f(URC[0], URC[1], BLC[2]);
-        glVertex3f(URC[0], URC[1], URC[2]);
-        glVertex3f(URC[0], URC[1], URC[2]);
-        glVertex3f(URC[0], BLC[1], URC[2]);
-        glVertex3f(URC[0], BLC[1], URC[2]);
-        glVertex3f(URC[0], BLC[1], BLC[2]);
-
-        glEnd();
-    }
-}
-
-void Application::drawEdges() {
-    auto& cubes = scene->getCubes();
-    for(size_t i = 0; i < cubes.size(); i++) {
-        for(size_t j = 0; j < cubes[i].edges.size(); j++) {
-            glBegin(GL_LINES);
-            glColor3f(1.0f, 1.0f, 0.0f);
-
-            Vector pointOne = cubes[i].center;
-            Vector pointTwo = cubes[i].edges[j].center;
-
-            glVertex3f(pointOne[0], pointOne[1], pointOne[2]);
-            glVertex3f(pointTwo[0], pointTwo[1], pointTwo[2]);
-
-            glEnd();
-        }
-    }
-}
-
 int Application::voxelOctrees(Vector URC, Vector BLC, Vector centerPosition) {
     auto& cubes = scene->getCubes();
     
@@ -446,64 +365,6 @@ int Application::voxelOctrees(Vector URC, Vector BLC, Vector centerPosition) {
         }
     }
     return depth - 1;
-}
-
-void Application::drawNodes() {
-    auto& path = scene->getPath();
-    float theta = (2 * M_PI) / 50;
-
-    // Draw start node (green)
-    for (float v = 0.0; v < M_PI; v+= theta) {
-        glBegin(GL_TRIANGLE_STRIP);
-        for (float u = 0.0; u < 2 * M_PI; u+= theta) {
-            glColor3f(0.2, 0.8, 0.1);
-            glVertex3f((cos(u) * sin(v) * 1) + start.center[0],
-                      (sin(u) * sin(v) * 1) + start.center[1], 
-                      (cos(v) * 1) + start.center[2]);
-            glVertex3f((cos(u) * sin(v + theta) * 1) + start.center[0], 
-                      (sin(u) * sin(v + theta) * 1) + start.center[1], 
-                      (cos(v + theta) * 1) + start.center[2]);
-        }
-        glEnd();
-    }
-
-    // Draw goal node (blue)
-    for (float v = 0.0; v < M_PI; v+= theta) {
-        glBegin(GL_TRIANGLE_STRIP);
-        for (float u = 0.0; u < 2 * M_PI; u+= theta) {
-            glColor3f(0.1, 0.1, 0.8);
-            glVertex3f((cos(u) * sin(v) * 1) + goal.center[0],
-                      (sin(u) * sin(v) * 1) + goal.center[1], 
-                      (cos(v) * 1) + goal.center[2]);
-            glVertex3f((cos(u) * sin(v + theta) * 1) + goal.center[0], 
-                      (sin(u) * sin(v + theta) * 1) + goal.center[1], 
-                      (cos(v + theta) * 1) + goal.center[2]);
-        }
-        glEnd();
-    }
-
-    // Draw edges if path not found
-    if(path.empty()) {
-        for(size_t i = 0; i < start.edges.size(); i++) {
-            glBegin(GL_LINES);
-            glColor3f(1.0f, 1.0f, 0.0f);
-            Vector pointOne = start.center;
-            Vector pointTwo = start.edges[i].center;
-            glVertex3f(pointOne[0], pointOne[1], pointOne[2]);
-            glVertex3f(pointTwo[0], pointTwo[1], pointTwo[2]);
-            glEnd();
-        }
-
-        for(size_t i = 0; i < goal.edges.size(); i++) {
-            glBegin(GL_LINES);
-            glColor3f(1.0f, 1.0f, 0.0f);
-            Vector pointOne = goal.center;
-            Vector pointTwo = goal.edges[i].center;
-            glVertex3f(pointOne[0], pointOne[1], pointOne[2]);
-            glVertex3f(pointTwo[0], pointTwo[1], pointTwo[2]);
-            glEnd();
-        }
-    }
 }
 
 size_t Application::minimumNode(std::vector<Pair> &list) {
@@ -596,17 +457,5 @@ void Application::findPath() {
                 break;
             }
         }
-    }
-}
-
-void Application::drawPath() {
-    auto& path = scene->getPath();
-    
-    for(size_t i = 0; i < path.size() - 1; i++) {
-        glBegin(GL_LINES);
-        glColor3f(0.0f, 1.0f, 0.0f);
-        glVertex3f(path[i][0], path[i][1], path[i][2]);
-        glVertex3f(path[i + 1][0], path[i + 1][1], path[i + 1][2]);
-        glEnd();
     }
 }

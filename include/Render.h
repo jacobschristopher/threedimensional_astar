@@ -18,7 +18,7 @@ class Render {
 
     private:
         void drawSphere(const Vector& center, float radius, float r, float g, float b);
-        void drawCube(const Vector& upperRight, const Vector& bottomrLeft, float r, float g, float b);
+        void drawCube(const Vector& upperRight, const Vector& bottomLeft, float r, float g, float b);
 };
 
 #endif
