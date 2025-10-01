@@ -3,6 +3,7 @@
 
 #include "Scene.h"
 #include "Render.h"
+#include "IOHandler.h"
 #include <memory>
 
 class Application {
@@ -20,6 +21,7 @@ class Application {
         int winHeight;
         std::shared_ptr<Scene> scene;
         std::shared_ptr<Render> renderer;
+        std::shared_ptr<IOHandler> io;
         Voxels start;
         Voxels goal;
         int depth;
